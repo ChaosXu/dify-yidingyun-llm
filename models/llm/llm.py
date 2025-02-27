@@ -2,17 +2,20 @@ import logging
 from collections.abc import Generator
 from typing import Optional, Union
 
-from dify_plugin import LargeLanguageModel
 from dify_plugin.entities import I18nObject
-from dify_plugin.errors.model import (
-    CredentialsValidateFailedError,
-)
+
 from dify_plugin.entities.model import (
     AIModelEntity,
     FetchFrom,
+    I18nObject,
+    ModelFeature,
+    ModelPropertyKey,
     ModelType,
+    ParameterRule,
+    ParameterType,
 )
 from dify_plugin.entities.model.llm import (
+    LLMMode,
     LLMResult,
 )
 from dify_plugin.entities.model.message import (
@@ -20,10 +23,12 @@ from dify_plugin.entities.model.message import (
     PromptMessageTool,
 )
 
+from dify_plugin import OAICompatLargeLanguageModel
+
 logger = logging.getLogger(__name__)
 
 
-class DifyYidingyunLlmLargeLanguageModel(LargeLanguageModel):
+class YidingyunLargeLanguageModel(OAICompatLargeLanguageModel):
     """
     Model class for dify-yidingyun-llm large language model.
     """
@@ -52,25 +57,19 @@ class DifyYidingyunLlmLargeLanguageModel(LargeLanguageModel):
         :param user: unique user id
         :return: full response or stream response chunk generator result
         """
-        pass
-   
-    def get_num_tokens(
-        self,
-        model: str,
-        credentials: dict,
-        prompt_messages: list[PromptMessage],
-        tools: Optional[list[PromptMessageTool]] = None,
-    ) -> int:
-        """
-        Get number of tokens for given prompt messages
+        self._add_custom_parameters(credentials)
+        if "response_format" in model_parameters:
+            model_parameters["response_format"] = {
+                "type": model_parameters.get("response_format")
+            }
+        return super()._invoke(
+            model, credentials, prompt_messages, model_parameters, tools, stop, stream
+        )
 
-        :param model: model name
-        :param credentials: model credentials
-        :param prompt_messages: prompt messages
-        :param tools: tools for tool calling
-        :return:
-        """
-        return 0
+    @classmethod
+    def _add_custom_parameters(cls, credentials: dict) -> None:
+        credentials["mode"] = "chat"
+        credentials["endpoint_url"] = credentials["base_url"]
 
     def validate_credentials(self, model: str, credentials: dict) -> None:
         """
@@ -80,10 +79,8 @@ class DifyYidingyunLlmLargeLanguageModel(LargeLanguageModel):
         :param credentials: model credentials
         :return:
         """
-        try:
-            pass
-        except Exception as ex:
-            raise CredentialsValidateFailedError(str(ex))
+        self._add_custom_parameters(credentials)
+        super().validate_credentials(model, credentials)
 
     def get_customizable_model_schema(
         self, model: str, credentials: dict
@@ -99,12 +96,59 @@ class DifyYidingyunLlmLargeLanguageModel(LargeLanguageModel):
         """
         entity = AIModelEntity(
             model=model,
-            label=I18nObject(zh_Hans=model, en_US=model),
+            label=I18nObject(en_US=model, zh_Hans=model),
             model_type=ModelType.LLM,
-            features=[],
+            features=(
+                [
+                    ModelFeature.TOOL_CALL,
+                    ModelFeature.MULTI_TOOL_CALL,
+                    ModelFeature.STREAM_TOOL_CALL,
+                ]
+                if credentials.get("function_calling_type") == "tool_call"
+                else []
+            ),
             fetch_from=FetchFrom.CUSTOMIZABLE_MODEL,
-            model_properties={},
-            parameter_rules=[],
+            model_properties={
+                ModelPropertyKey.CONTEXT_SIZE: int(
+                    credentials.get("context_size", 8000)
+                ),
+                ModelPropertyKey.MODE: LLMMode.CHAT.value,
+            },
+            parameter_rules=[
+                ParameterRule(
+                    name="temperature",
+                    use_template="temperature",
+                    label=I18nObject(en_US="Temperature", zh_Hans="温度"),
+                    type=ParameterType.FLOAT,
+                ),
+                ParameterRule(
+                    name="max_tokens",
+                    use_template="max_tokens",
+                    default=512,
+                    min=1,
+                    max=int(credentials.get("max_tokens", 1024)),
+                    label=I18nObject(en_US="Max Tokens", zh_Hans="最大标记"),
+                    type=ParameterType.INT,
+                ),
+                ParameterRule(
+                    name="top_p",
+                    use_template="top_p",
+                    label=I18nObject(en_US="Top P", zh_Hans="Top P"),
+                    type=ParameterType.FLOAT,
+                ),
+                ParameterRule(
+                    name="top_k",
+                    use_template="top_k",
+                    label=I18nObject(en_US="Top K", zh_Hans="Top K"),
+                    type=ParameterType.FLOAT,
+                ),
+                ParameterRule(
+                    name="frequency_penalty",
+                    use_template="frequency_penalty",
+                    label=I18nObject(en_US="Frequency Penalty", zh_Hans="重复惩罚"),
+                    type=ParameterType.FLOAT,
+                ),
+            ],
         )
 
         return entity

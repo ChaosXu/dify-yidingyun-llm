@@ -1,17 +1,13 @@
 version: 0.0.1
 type: plugin
 author: chaosxu
-name: dify-yidingyun-llm
+name: yidingyun
 label:
-  en_US: dify-yidingyun-llm
-  ja_JP: dify-yidingyun-llm
-  zh_Hans: dify-yidingyun-llm
-  pt_BR: dify-yidingyun-llm
+  en_US: yidingyun
+  zh_Hans: 鼎云
 description:
   en_US: LLM provider of yidingyun
-  ja_JP: LLM provider of yidingyun
-  zh_Hans: LLM provider of yidingyun
-  pt_BR: LLM provider of yidingyun
+  zh_Hans: 鼎云大模型服务
 icon: icon.svg
 resource:
   memory: 268435456
@@ -26,7 +22,7 @@ resource:
       moderation: false
 plugins:
   models:
-    - provider/dify-yidingyun-llm.yaml
+    - provider/yidingyun.yaml
 meta:
   version: 0.0.1
   arch:

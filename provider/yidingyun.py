@@ -8,7 +8,7 @@ from dify_plugin.errors.model import CredentialsValidateFailedError
 logger = logging.getLogger(__name__)
 
 
-class DifyYidingyunLlmModelProvider(ModelProvider):
+class YidingyunModelProvider(ModelProvider):
     def validate_provider_credentials(self, credentials: Mapping) -> None:
         """
         Validate provider credentials
