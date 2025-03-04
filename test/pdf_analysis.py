@@ -2,7 +2,7 @@ import fitz
 import openai
 import os
 
-from openai.types.chat import ChatCompletion
+from openai.types.chat import ChatCompletionChunk, ChatCompletion
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -45,8 +45,34 @@ def analyze_pdf_with_openai(pdf_text: str, prompt: str) -> ChatCompletion:
     return response
 
 
+def analyze_pdf_with_openai_stream(pdf_text: str, prompt: str):
+    client = OpenAIWithoutAuth(base_url=OPENAI_API_BASE)
+
+    # 设置 stream 为 True
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": "你是一个擅长分析 PDF 文档的助手。"},
+            {"role": "user", "content": f"{prompt}\n\n{pdf_text}"},
+        ],
+        stream=True,
+    )
+
+    # 迭代生成器，逐步获取响应内容
+    for chunk in response:
+        chunk: ChatCompletionChunk
+        if chunk.choices[0].delta.content is not None:
+            content = chunk.choices[0].delta.content
+            if content.startswith("<think>"):
+                print("深度思考:")
+                content = content.replace("<think>", "")
+            if content.endswith("</think>"):
+                print("思考结束!")
+                content = content.replace("</think>", "")
+            print(content, end="", flush=True)
+    print()
+
+
 if __name__ == "__main__":
     text = extract_text_from_pdf(PDF_PATH)
-    result = analyze_pdf_with_openai(pdf_text=text, prompt="请总结这份 PDF 的主要内容")
-    print("PDF 结果：")
-    print(result.choices[0].message.content)
+    analyze_pdf_with_openai_stream(pdf_text=text, prompt="请总结这份 PDF 的主要内容")
