@@ -27,7 +27,7 @@ model_credential_schema:
       label:
         en_US: API Key
       type: secret-input
-      required: true
+      required: false
       placeholder:
         zh_Hans: 在此输入您的 API Key
         en_US: Enter your API Key
@@ -39,6 +39,54 @@ model_credential_schema:
         en_US: Base url of Yidingyun, e.g. http://chatapi.yidingyun/v1
         zh_Hans: 鼎云的基础, 例如 http://chatapi.yidingyun/v1
       required: true
+      type: text-input
+    - variable: context_size
+      label:
+        zh_Hans: 模型上下文长度
+        en_US: Model context size
+      required: true
+      show_on:
+        - variable: __model_type
+          value: llm
+      type: text-input
+      default: "32768"
+      placeholder:
+        zh_Hans: 在此输入您的模型上下文长度
+        en_US: Enter your Model context size
+    - variable: context_size
+      label:
+        zh_Hans: 模型上下文长度
+        en_US: Model context size
+      required: true
+      show_on:
+        - variable: __model_type
+          value: text-embedding
+      type: text-input
+      default: "32768"
+      placeholder:
+        zh_Hans: 在此输入您的模型上下文长度
+        en_US: Enter your Model context size
+    - variable: context_size
+      label:
+        zh_Hans: 模型上下文长度
+        en_US: Model context size
+      required: true
+      show_on:
+        - variable: __model_type
+          value: rerank
+      type: text-input
+      default: "32768"
+      placeholder:
+        zh_Hans: 在此输入您的模型上下文长度
+        en_US: Enter your Model context size
+    - variable: max_tokens_to_sample
+      label:
+        zh_Hans: 最大 token 上限
+        en_US: Upper bound for max tokens
+      show_on:
+        - variable: __model_type
+          value: llm
+      default: "32768"
       type: text-input
   model:
     label:

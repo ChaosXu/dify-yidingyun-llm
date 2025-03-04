@@ -58,6 +58,10 @@ class YidingyunLargeLanguageModel(OAICompatLargeLanguageModel):
         :return: full response or stream response chunk generator result
         """
         self._add_custom_parameters(credentials)
+        # print(f"model_parameters: {model_parameters}")
+        # print(f"prompt_messages: {prompt_messages}")
+        # print(f"credentials: {credentials}")
+
         if "response_format" in model_parameters:
             model_parameters["response_format"] = {
                 "type": model_parameters.get("response_format")
@@ -126,7 +130,7 @@ class YidingyunLargeLanguageModel(OAICompatLargeLanguageModel):
                     use_template="max_tokens",
                     default=512,
                     min=1,
-                    max=int(credentials.get("max_tokens", 1024)),
+                    max=int(credentials.get("max_tokens", 32768)),
                     label=I18nObject(en_US="Max Tokens", zh_Hans="最大标记"),
                     type=ParameterType.INT,
                 ),
